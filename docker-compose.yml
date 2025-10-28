@@ -1,0 +1,49 @@
+services:
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cloud-storage-frontend
+    ports:
+      - "8888:80"  # 使用 8888 端口访问前端，避免与宿主机 80 端口冲突
+    depends_on:
+      - backend
+    restart: always
+
+  # 后端服务
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cloud-storage-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/cloud_storage?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=125217
+    volumes:
+      - ./uploads:/app/uploads
+    restart: always
+
+  # 数据库服务
+  db:
+    image: mysql:8.0
+    container_name: cloud-storage-db
+    # 不暴露 3306 端口到宿主机，只在容器间通信
+    # ports:
+    #   - "3306:3306"
+    expose:
+      - "3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=125217
+      - MYSQL_DATABASE=cloud_storage
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: always
+
+volumes:
+  mysql-data:
